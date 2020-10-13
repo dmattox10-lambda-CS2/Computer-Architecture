@@ -2,6 +2,7 @@
 
 import sys
 
+
 class CPU:
     """Main CPU class."""
 
@@ -11,6 +12,7 @@ class CPU:
         self.register = [0] * 8
         self.counter = 0
         self.halted = False
+        self.pc = 0
 
         self.instruction_set = {
             0b00000001: self.HLT,
@@ -26,7 +28,7 @@ class CPU:
         """Load a program into memory."""
 
         address = 0
-
+        # print(self.pc)
         try:
             with open('examples/' + filename) as f:
                 for line in f:
@@ -34,14 +36,16 @@ class CPU:
                     instruction = x.strip()
 
                     if instruction != "":
-                        self.ram[address] = '0b' + instruction
-                        print(self.ram[address])
+                        # self.ram[address] = '0b' + instruction # CAN'T USE STRINGS
+                        # self.ram[address] = bin(int(instruction, 2))  # MANGLES
+                        # INTS BUT RUINS PRINT VALUE
+                        self.ram[address] = int(instruction, 2)
+                        # print(bin(self.ram[address]))
                         address += 1
 
         except FileNotFoundError:
             print(f"{sys.argv[0]}: {filename} not found!")
             sys.exit(2)
-
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -49,10 +53,11 @@ class CPU:
         if op == "ADD":
             self.register[reg_a] += self.register[reg_b]
 
-        if op == "MUL":
+        elif op == "MUL":
             self.register[reg_a] *= self.register[reg_b]
             self.counter += 3
-        #elif op == "SUB": etc
+            # print(f'MUL')
+        # elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -64,8 +69,8 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.counter,
-            #self.fl,
-            #self.ie,
+            # self.fl,
+            # self.ie,
             self.ram_read(self.counter),
             self.ram_read(self.counter + 1),
             self.ram_read(self.counter + 2)
@@ -78,16 +83,20 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+        # print(self.ram)
+        self.counter = 0
+        # print(self.counter)
         while not self.halted:
-            self.trace()
-            current_instruction = self.ram_read(self.counter)
-            if current_instruction in self.instruction_set:
-                self.instruction_set[current_instruction]()
-                print(self.instruction_set[current_instruction])
 
+            current_instruction = self.ram_read(self.counter)
+
+            if current_instruction in self.instruction_set:
+                # print(bin(current_instruction))
+                self.instruction_set[current_instruction]()
+                # print(f'instruction')
             elif current_instruction in self.alu_instructions:
                 self.alu_instructions[current_instruction]
-                print(self.alu_instructions[current_instruction])
+                # print(f'alu')
             else:
                 print(f"No {current_instruction} at {self.counter}")
                 sys.exit(1)
@@ -104,11 +113,14 @@ class CPU:
     def LDI(self):
         address = self.ram_read(self.counter + 1)
         value = self.ram_read(self.counter + 2)
+        # print(value)
         self.register[address] = value
         self.counter += 3
 
     def PRN(self):
         address = self.ram_read(self.counter + 1)
         value = self.register[address]
+        # print(f'printing {value}')
+        # print(self.ram)
         print(value)
         self.counter += 2
