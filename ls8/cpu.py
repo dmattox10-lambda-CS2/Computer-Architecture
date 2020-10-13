@@ -15,29 +15,32 @@ class CPU:
         self.instruction_set = {
             0b00000001: self.HLT,
             0b10000010: self.LDI,
-            0b01000111: self.PRN
+            0b01000111: self.PRN,
         }
 
-    def load(self):
+        self.alu_instructions = {
+            0b10100010: self.alu("MUL", self.register[self.ram_read(self.counter + 1)], self.register[self.ram_read(self.counter + 2)])
+        }
+
+    def load(self, filename):
         """Load a program into memory."""
 
         address = 0
 
-        # For now, we've just hardcoded a program:
+        try:
+            with open('examples/' + filename) as f:
+                for line in f:
+                    x = line.split("#")[0]
+                    instruction = x.strip()
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+                    if instruction != "":
+                        self.ram[address] = '0b' + instruction
+                        print(self.ram[address])
+                        address += 1
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        except FileNotFoundError:
+            print(f"{sys.argv[0]}: {filename} not found!")
+            sys.exit(2)
 
 
     def alu(self, op, reg_a, reg_b):
@@ -45,6 +48,10 @@ class CPU:
 
         if op == "ADD":
             self.register[reg_a] += self.register[reg_b]
+
+        if op == "MUL":
+            self.register[reg_a] *= self.register[reg_b]
+            self.counter += 3
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -72,10 +79,15 @@ class CPU:
     def run(self):
         """Run the CPU."""
         while not self.halted:
+            self.trace()
             current_instruction = self.ram_read(self.counter)
             if current_instruction in self.instruction_set:
                 self.instruction_set[current_instruction]()
-            
+                print(self.instruction_set[current_instruction])
+
+            elif current_instruction in self.alu_instructions:
+                self.alu_instructions[current_instruction]
+                print(self.alu_instructions[current_instruction])
             else:
                 print(f"No {current_instruction} at {self.counter}")
                 sys.exit(1)
