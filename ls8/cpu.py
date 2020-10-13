@@ -21,7 +21,7 @@ class CPU:
         }
 
         self.alu_instructions = {
-            0b10100010: self.alu("MUL", self.register[self.ram_read(self.counter + 1)], self.register[self.ram_read(self.counter + 2)])
+            0b10100010: self.alu
         }
 
     def load(self, filename):
@@ -84,7 +84,7 @@ class CPU:
     def run(self):
         """Run the CPU."""
         # print(self.ram)
-        self.counter = 0
+        # self.counter = 0
         # print(self.counter)
         while not self.halted:
 
@@ -95,7 +95,7 @@ class CPU:
                 self.instruction_set[current_instruction]()
                 # print(f'instruction')
             elif current_instruction in self.alu_instructions:
-                self.alu_instructions[current_instruction]
+                self.alu_instructions[current_instruction]("MUL", self.ram_read(self.counter + 1), self.ram_read(self.counter + 2))
                 # print(f'alu')
             else:
                 print(f"No {current_instruction} at {self.counter}")
