@@ -12,12 +12,15 @@ class CPU:
         self.register = [0] * 8
         self.counter = 0
         self.halted = False
-        self.pc = 0
+        #self.SP = 0
+        self.register[-1] = 0xF4
 
         self.instruction_set = {
             0b00000001: self.HLT,
             0b10000010: self.LDI,
             0b01000111: self.PRN,
+            0b01000110: self.POP,
+            0b01000101: self.PUSH
         }
 
         self.alu_instructions = {
@@ -77,10 +80,10 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-
         while not self.halted:
 
             current_instruction = self.ram_read(self.counter)
+            #print(self.instruction_set[current_instruction], self.counter)
 
             if current_instruction in self.instruction_set:
                 self.instruction_set[current_instruction]()
@@ -110,4 +113,14 @@ class CPU:
         address = self.ram_read(self.counter + 1)
         value = self.register[address]
         print(value)
+        self.counter += 2
+
+    def POP(self):
+        self.register[self.ram[self.counter + 1]] = self.ram[self.register[-1]]
+        self.register[-1] += 1
+        self.counter += 2
+
+    def PUSH(self):
+        self.register[-1] -= 1
+        self.ram[self.register[-1]] = self.register[self.ram[self.counter + 1]]
         self.counter += 2
