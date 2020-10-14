@@ -12,8 +12,10 @@ class CPU:
         self.register = [0] * 8
         self.counter = 0
         self.halted = False
-        #self.SP = 0
         self.register[-1] = 0xF4
+        self.L = False
+        self.G = False
+        self.E = False
 
         self.instruction_set = {
             0b00000001: self.HLT,
@@ -22,12 +24,16 @@ class CPU:
             0b01000110: self.POP,
             0b01000101: self.PUSH,
             0b01010000: self.CALL,
-            0b00010001: self.RET
+            0b00010001: self.RET,
+            0b01010100: self.JMP,
+            0b01010110: self.JNE,
+            0b01010101: self.JEQ
         }
 
         self.alu_instructions = {
             0b10100010: "MUL",
-            0b10100000: "ADD"
+            0b10100000: "ADD",
+            0b10100111: "CMP"
         }
 
     def load(self, filename):
@@ -42,7 +48,7 @@ class CPU:
 
                     if instruction != "":
                         self.ram[address] = int(instruction, 2)
-                        print(instruction)
+                        # print(instruction)
                         address += 1
 
         except FileNotFoundError:
@@ -58,6 +64,21 @@ class CPU:
 
         elif op == "MUL":
             self.register[reg_a] *= self.register[reg_b]
+            self.counter += 3
+
+        elif op == "CMP":
+            if self.register[reg_a] < self.register[reg_b]:
+                self.L = True
+                self.G = False
+                self.E = False
+            elif self.register[reg_a] > self.register[reg_b]:
+                self.L = False
+                self.G = True
+                self.E = False
+            elif self.register[reg_a] == self.register[reg_b]:
+                self.L = False
+                self.G = False
+                self.E = True
             self.counter += 3
 
         else:
@@ -88,7 +109,7 @@ class CPU:
         while not self.halted:
 
             current_instruction = self.ram_read(self.counter)
-            #print(self.instruction_set[current_instruction], self.counter)
+            # print(self.instruction_set[current_instruction], self.counter)
 
             if current_instruction in self.instruction_set:
                 self.instruction_set[current_instruction]()
@@ -138,3 +159,18 @@ class CPU:
     def RET(self):
         self.counter = self.ram[self.register[-1]]
         self.register[-1] += 1
+
+    def JMP(self):
+        self.counter = self.register[self.ram[self.counter + 1]]
+    
+    def JNE(self):
+        if not self.E:
+            self.JMP()
+        else:
+            self.counter += 2
+    
+    def JEQ(self):
+        if self.E:
+            self.JMP()
+        else:
+            self.counter += 2
