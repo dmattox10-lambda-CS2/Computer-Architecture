@@ -20,11 +20,14 @@ class CPU:
             0b10000010: self.LDI,
             0b01000111: self.PRN,
             0b01000110: self.POP,
-            0b01000101: self.PUSH
+            0b01000101: self.PUSH,
+            0b01010000: self.CALL,
+            0b00010001: self.RET
         }
 
         self.alu_instructions = {
-            0b10100010: "MUL"
+            0b10100010: "MUL",
+            0b10100000: "ADD"
         }
 
     def load(self, filename):
@@ -39,6 +42,7 @@ class CPU:
 
                     if instruction != "":
                         self.ram[address] = int(instruction, 2)
+                        print(instruction)
                         address += 1
 
         except FileNotFoundError:
@@ -50,6 +54,7 @@ class CPU:
 
         if op == "ADD":
             self.register[reg_a] += self.register[reg_b]
+            self.counter += 3
 
         elif op == "MUL":
             self.register[reg_a] *= self.register[reg_b]
@@ -124,3 +129,12 @@ class CPU:
         self.register[-1] -= 1
         self.ram[self.register[-1]] = self.register[self.ram[self.counter + 1]]
         self.counter += 2
+
+    def CALL(self):
+        self.register[-1] -= 1
+        self.ram[self.register[-1]] = self.counter + 2
+        self.counter = self.register[self.ram[self.counter + 1]]
+
+    def RET(self):
+        self.counter = self.ram[self.register[-1]]
+        self.register[-1] += 1
