@@ -21,7 +21,7 @@ class CPU:
         }
 
         self.alu_instructions = {
-            0b10100010: self.alu
+            0b10100010: "MUL"
         }
 
     def load(self, filename):
@@ -51,7 +51,7 @@ class CPU:
         elif op == "MUL":
             self.register[reg_a] *= self.register[reg_b]
             self.counter += 3
-            
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -77,7 +77,7 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        
+
         while not self.halted:
 
             current_instruction = self.ram_read(self.counter)
@@ -85,7 +85,8 @@ class CPU:
             if current_instruction in self.instruction_set:
                 self.instruction_set[current_instruction]()
             elif current_instruction in self.alu_instructions:
-                self.alu_instructions[current_instruction]("MUL", self.ram_read(self.counter + 1), self.ram_read(self.counter + 2))
+                self.alu(self.alu_instructions[current_instruction], self.ram_read(
+                    self.counter + 1), self.ram_read(self.counter + 2))
             else:
                 print(f"No {current_instruction} at {self.counter}")
                 sys.exit(1)
