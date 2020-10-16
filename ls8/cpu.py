@@ -33,7 +33,14 @@ class CPU:
         self.alu_instructions = {
             0b10100010: "MUL",
             0b10100000: "ADD",
-            0b10100111: "CMP"
+            0b10100111: "CMP",
+            0b10101000: "AND",
+            0b10101010: "OR",
+            0b10101011: "XOR",
+            0b01101001: "NOT",
+            0b10101100: "SHL",
+            0b10101101: "SHR",
+            0b10100100: "MOD"
         }
 
     def load(self, filename):
@@ -79,6 +86,34 @@ class CPU:
                 self.L = False
                 self.G = False
                 self.E = True
+            self.counter += 3
+
+        elif op == "AND":
+            self.register[reg_a] &= self.register[reg_b]
+            self.counter += 3
+        
+        elif op == "OR":
+            self.register[reg_a] |= self.register[reg_b]
+            self.counter += 3
+        
+        elif op == "XOR":
+            self.register[reg_a] ^= self.register[reg_b]
+            self.counter += 3
+
+        elif op == "NOT":
+            self.register[reg_a] = ~self.register[reg_a]
+            self.counter += 2
+        
+        elif op == "SHL":
+            self.register[reg_a] = self.register[reg_a] << self.register[reg_b]
+            self.counter += 3
+        
+        elif op == "SHR":
+            self.register[reg_a] = self.register[reg_a] >> self.register[reg_b]
+            self.counter += 3
+        
+        elif op == "MOD":
+            self.register[reg_a] %= self.register[reg_b]
             self.counter += 3
 
         else:
